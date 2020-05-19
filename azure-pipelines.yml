@@ -1,0 +1,68 @@
+resources:
+  containers:
+  - container: terraform-aws
+    image: 'registry.gitlab.com/dfds-platform/docker-terraform-terragrunt:0.5'  
+    env: {      
+      AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID),
+      AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY),
+      AWS_DEFAULT_REGION: eu-central-1
+    }
+
+variables:
+  - group: aws-deploy
+
+stages:
+- stage: Staging
+  variables:
+    stage_name_lower: staging
+  jobs:
+  - job: Terraform_Apply
+    pool: 
+      vmImage: 'ubuntu-16.04'  
+    container: terraform-aws
+    steps:
+    - script: |
+        cd infrastructure/environments/$(stage_name_lower)
+        terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
+        terragrunt apply --terragrunt-source-update --terragrunt-non-interactive -input=false -auto-approve
+      displayName: Apply changes in AWS   
+  
+
+  - job: Copy_files
+    dependsOn: Terraform_Apply 
+    pool: 
+      vmImage: 'ubuntu-16.04'
+    container: terraform-aws
+    steps: # content-type is set to text/html. Since only file is copied, then it's ok. Otherwise there could be a need to adjust on file basis.
+    - script: |
+        cd app/ios-app-assets
+        aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
+        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --content-type "text/html"
+      displayName: Copy app to S3 bucket
+- stage: Prod
+  variables:
+    stage_name_lower: prod
+  jobs:
+  - job: Terraform_Apply
+    pool: 
+      vmImage: 'ubuntu-16.04'  
+    container: terraform-aws
+    steps:
+    - script: |
+        cd infrastructure/environments/$(stage_name_lower)
+        terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
+        terragrunt apply --terragrunt-source-update --terragrunt-non-interactive -input=false -auto-approve
+      displayName: Apply changes in AWS   
+  
+
+  - job: Copy_files
+    dependsOn: Terraform_Apply 
+    pool: 
+      vmImage: 'ubuntu-16.04'
+    container: terraform-aws
+    steps:
+    - script: |
+        cd app/dfds-app
+        aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
+        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --content-type "text/html"
+      displayName: Copy app to S3 bucket
