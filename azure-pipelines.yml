@@ -64,5 +64,5 @@ stages:
     - script: |
         cd app/dfds-app
         aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
-        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --content-type "text/html"
+        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --include "*"
       displayName: Copy app to S3 bucket
