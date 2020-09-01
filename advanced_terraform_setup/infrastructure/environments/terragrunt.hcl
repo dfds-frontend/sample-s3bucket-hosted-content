@@ -4,7 +4,7 @@ remote_state {
 
   config = {
     encrypt        = true
-    bucket         = "dfds-app-terraform-state"
+    bucket         = "advanced-dfds-app-terraform-state"
     key            = "${path_relative_to_include()}/terraform.tfstate"
     region         = "eu-central-1"
     dynamodb_table = "terraform-locks"

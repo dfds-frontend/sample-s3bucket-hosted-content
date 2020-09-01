@@ -1,15 +1,19 @@
+variables:
+  - group: aws-deploy
+  - name: configure_capability_script
+    value: configure_capability.sh
+
 resources:
   containers:
   - container: terraform-aws
-    image: 'registry.gitlab.com/dfds-platform/docker-terraform-terragrunt:0.5'  
-    env: {      
-      AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID),
-      AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY),
-      AWS_DEFAULT_REGION: eu-central-1
+    image: 'registry.gitlab.com/dfds-platform/docker-terraform-terragrunt:0.11'
+    env: {
+      AWS_PROFILE: $(AWS_PROFILE),
+      SAML2AWS_USERNAME: $(SAML2AWS_USERNAME),
+      SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD),
+      SAML2AWS_ROLE: $(SAML2AWS_ROLE),
+      KUBECONFIG_URL: $(KUBECONFIG_URL)
     }
-
-variables:
-  - group: aws-deploy
 
 stages:
 - stage: Staging
@@ -21,19 +25,22 @@ stages:
       vmImage: 'ubuntu-16.04'  
     container: terraform-aws
     steps:
+    - bash: $(configure_capability_script)
+      displayName: "Login"
     - script: |
         cd infrastructure/environments/$(stage_name_lower)
         terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
         terragrunt apply --terragrunt-source-update --terragrunt-non-interactive -input=false -auto-approve
       displayName: Apply changes in AWS   
   
-
   - job: Copy_files
     dependsOn: Terraform_Apply 
     pool: 
       vmImage: 'ubuntu-16.04'
     container: terraform-aws
     steps: # content-type is set to text/html. Since only file is copied, then it's ok. Otherwise there could be a need to adjust on file basis.
+    - bash: $(configure_capability_script)
+      displayName: "Login"
     - script: |
         cd app/dfds-app
         aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
@@ -48,6 +55,8 @@ stages:
       vmImage: 'ubuntu-16.04'  
     container: terraform-aws
     steps:
+    - bash: $(configure_capability_script)
+      displayName: "Login"      
     - script: |
         cd infrastructure/environments/$(stage_name_lower)
         terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
@@ -61,6 +70,8 @@ stages:
       vmImage: 'ubuntu-16.04'
     container: terraform-aws
     steps:
+    - bash: $(configure_capability_script)
+      displayName: "Login"      
     - script: |
         cd app/dfds-app
         aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
