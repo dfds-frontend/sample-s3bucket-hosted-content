@@ -1,12 +1,16 @@
 # Introduction 
-This sample project is boilerplate for static content applications that are meant to be hosted in Amazon S3 bucket.
-The project contains a sample index.html page, that through AzureDevOps pipeline, will create the needed resources on Amazon. Then content is copied to S3 the created bucket.
+This sample project contain boiler plates for static content applications that are meant to be hosted in Amazon S3 bucket.
+The project contains a sample index.html page, which will deployed to an S3 bucket through Azure DevOps pipeline. The project contains Terraform code to configure the S3 bucket on Amazon. 
+The pipeline will run Terragrunt scripts to create the s3 bucket and copy the html page to the new S3 bucket.
+
 The static content is meant is to be accessed through an Amazon Cloudfront distribution.
-Therefore the setup will configure S3 bucket as private bucket by default while the Access level control will be set to be public through the pipeline.
+Therefore the setup will configure S3 bucket as private bucket by default, while the Access level control will be set to be public on the content through the pipeline.
 
 There are two folders one with simple terraform/terragrunt setup and the other one is with more advanced setup. 
-You should be able to configure your s3 bucket using the simplified setup by only providing a name of the s3 bucket for your app in each environment.
-The advanced setup provides an example of how setup a more complicated terraform/terragrunt project. This could be used in situation when there is a need to create multiple resources by combining building multiple modules and creating dependencies between them
+
+You should be able to configure your s3 bucket using the simplified setup by only providing a name of the s3 bucket that is going to host the content of your app in each environment.
+
+The advanced setup provides an example of how to deal with a more complicated terraform/terragrunt project. This could be used in situations when there is a need to use multiple resources to create bigger Cloud infrastructure. This is usually done by loading multiple modules and creating dependencies between them. You can read more about using Terraform modules [here](https://www.terraform.io/docs/configuration/modules.html).
 
 # Local development
 
@@ -48,3 +52,7 @@ More information can be found at DFDS playbook here [here](https://wiki.dfds.clo
 
 9. Push the code and wait for the pipeline to finish. 
 The pipeline will output the address of the bucket. You can view the file in the browser by pasting the the address http://app-name.s3.eu-central-1.amazonaws.com/index.html in the address bar.
+
+## Adding more staging environment
+Adding a new staging environment is as simple as creating a new folder under /infrastructure/environments/your_environment_name
+The easiest way to create the new folder is by copying the content of /infrastructure/environments/staging into your new folder /infrastructure/environments/your_environment_name. Then finally updating the inputs section inside /infrastructure/environments/your_environment_name/terragrunt.hcl

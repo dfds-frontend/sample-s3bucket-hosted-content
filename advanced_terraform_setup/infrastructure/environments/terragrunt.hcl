@@ -11,14 +11,17 @@ remote_state {
   }
 }
 
-terraform {
-  extra_arguments "common_vars" {
-
-    commands = get_terraform_commands_that_need_vars()
-
-    optional_var_files = [
-      "${get_terragrunt_dir()}/${find_in_parent_folders("region.tfvars", "skip-region-if-does-not-exist")}",
-      "${get_terragrunt_dir()}/${find_in_parent_folders("account.tfvars", "skip-account-if-does-not-exist")}"
-    ]
-  }
+generate "provider" {
+  path = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents = <<EOF
+    terraform {  
+      backend "s3" {}
+      required_version = "~> 0.12.2"
+    }
+    provider "aws" {
+      region  = "eu-central-1"
+      version = "~> 2.27.0"
+    }
+EOF
 }
