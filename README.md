@@ -22,17 +22,18 @@ Terraform v0.12.x
 3. Choose between using simplified or advanced configuration. And remove the other to keep your project clean. (Preferably the simplified)
 4. Copy content to your project
 5. Move content out of the xxxx_terraform_setup folder to root folder
-The folder structure should ideally look like this:
+The folder structure should look something like this:
+
 ```
-   /root
-      /app
-      /infrastructure
-         /environments
-         /...
-      azure-pipelines.yml
-      README.md
-      ...
+├── app/
+├── infrastructure/
+|   ├── environments/
+|   ├── .../
+├── azure-pipelines.yml
+├── README.md
+├── ...
 ```
+
 6. Update the Terraform state bucket name by doing the following:
    3.1 Change the value for the property "remote_state.config.bucket" in this file ..\infrastructure\environments\terragrunt.hcl with the appropriate bucket name.
    3.2 Update the inputs section
