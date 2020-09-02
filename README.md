@@ -25,6 +25,7 @@ Terraform v0.12.x
 The folder structure should look something like this:
 
 ```
+root/
 ├── app/
 ├── infrastructure/
 |   ├── environments/
