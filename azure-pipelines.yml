@@ -1,68 +1,42 @@
+variables:
+  - group: aws-deploy
+  - name: bucket_name
+    value: dfds-app-$(System.StageName)
+
 resources:
   containers:
   - container: terraform-aws
-    image: 'registry.gitlab.com/dfds-platform/docker-terraform-terragrunt:0.5'  
-    env: {      
-      AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID),
-      AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY),
-      AWS_DEFAULT_REGION: eu-central-1
+    image: 'registry.gitlab.com/dfds-platform/docker-terraform-terragrunt:0.12'
+    env: {
+      AWS_PROFILE: $(AWS_PROFILE),
+      SAML2AWS_USERNAME: $(SAML2AWS_USERNAME),
+      SAML2AWS_PASSWORD: $(SAML2AWS_PASSWORD),
+      SAML2AWS_ROLE: $(SAML2AWS_ROLE)
     }
 
-variables:
-  - group: aws-deploy
-
 stages:
-- stage: Staging
-  variables:
-    stage_name_lower: staging
+- stage: staging
   jobs:
-  - job: Terraform_Apply
+  - job: terraform_apply
     pool: 
-      vmImage: 'ubuntu-16.04'  
+      vmImage: 'ubuntu-latest'
     container: terraform-aws
     steps:
+    - template: shared-steps-capability-login.yml
     - script: |
-        cd infrastructure/environments/$(stage_name_lower)
-        terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
+        cd infrastructure/environments/$(System.StageName)
         terragrunt apply --terragrunt-source-update --terragrunt-non-interactive -input=false -auto-approve
       displayName: Apply changes in AWS   
   
-
-  - job: Copy_files
-    dependsOn: Terraform_Apply 
+  - job: copy_files
+    dependsOn: terraform_apply
     pool: 
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     container: terraform-aws
     steps: # content-type is set to text/html. Since only file is copied, then it's ok. Otherwise there could be a need to adjust on file basis.
+    - template: shared-steps-capability-login.yml
     - script: |
         cd app/dfds-app
-        aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
-        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --content-type "text/html"
-      displayName: Copy app to S3 bucket
-- stage: Prod
-  variables:
-    stage_name_lower: prod
-  jobs:
-  - job: Terraform_Apply
-    pool: 
-      vmImage: 'ubuntu-16.04'  
-    container: terraform-aws
-    steps:
-    - script: |
-        cd infrastructure/environments/$(stage_name_lower)
-        terragrunt plan --terragrunt-source-update --terragrunt-non-interactive -input=false
-        terragrunt apply --terragrunt-source-update --terragrunt-non-interactive -input=false -auto-approve
-      displayName: Apply changes in AWS   
-  
-
-  - job: Copy_files
-    dependsOn: Terraform_Apply 
-    pool: 
-      vmImage: 'ubuntu-16.04'
-    container: terraform-aws
-    steps:
-    - script: |
-        cd app/dfds-app
-        aws s3 rm s3://dfds-app-$(stage_name_lower) --recursive
-        aws s3 cp src s3://dfds-app-$(stage_name_lower) --recursive --acl public-read --include "*"
+        aws s3 rm s3://$(bucket_name) --recursive
+        aws s3 cp src s3://$(bucket_name) --recursive --acl public-read --content-type "text/html"
       displayName: Copy app to S3 bucket
