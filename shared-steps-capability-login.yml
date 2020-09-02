@@ -1,0 +1,4 @@
+steps:
+  - bash: |
+        auto_saml_login.sh                
+    displayName: login to capability account

@@ -14,23 +14,37 @@ Terraform v0.12.x
 
 # Build and Test
 1. Clone the repo into your local space
-2. Choose between using simplified or advanced configuration. And remove the other to keep your project clean. (Preferably the simplified)
-3. Update the Terraform state bucket name by doing the following:
-   3.1 Change the value for the property "remote_state.config.bucket" in ..\infrastructure\environments\terragrunt.hcl with the appropriate bucket name.
+2. Create a repo on Azure DevOps and clone it locally or use an existing repo.
+3. Choose between using simplified or advanced configuration. And remove the other to keep your project clean. (Preferably the simplified)
+4. Copy content to your project
+5. Move content out of the xxxx_terraform_setup folder to root folder
+The folder structure should ideally look like this:
+```
+   /root
+      /app
+      /infrastructure
+         /environments
+         /...
+      azure-pipelines.yml
+      README.md
+      ...
+```
+6. Update the Terraform state bucket name by doing the following:
+   3.1 Change the value for the property "remote_state.config.bucket" in this file ..\infrastructure\environments\terragrunt.hcl with the appropriate bucket name.
    3.2 Update the inputs section
 
-4. Make sure that the Library of hosting Azure DevOps project, has defined defined variable group named "aws-deploy" with the following variables:
+7. Make sure that the Library inside the Azure DevOps project, has a variable group named "aws-deploy" with the following variables:
    - AWS_PROFILE
    - SAML2AWS_USERNAME
    - SAML2AWS_PASSWORD
    - SAML2AWS_ROLE
 
-These variables can be found in the capability's Amazon Account's Parameter Store. You can find it by going to AWS Systems Manager -> Parameter Store under Application Management in the menu.
-Name of the parameter is /managed/deploy/ad-creds and the region is Frankfurt
+SAML Username and password can be found in the Parameter Store in Amazon Account that is associated with the capability. You can find it by going to AWS Systems Manager -> Parameter Store under Application Management in the menu.
+The name of the parameter is /managed/deploy/ad-creds and make sure that the region is set to Frankfurt.
 
-5. Update the paths with the appropriate name in the azure-pipeline.yml file.
+More information can be found at DFDS playbook here [here](https://wiki.dfds.cloud/en/playbooks/deployment/authentication).
 
-6. Move content of the xxxx_terraform_setup
+8. Update the paths with the appropriate name in the azure-pipeline.yml file.
 
-7. Push the code and wait for the pipeline to finish. 
+9. Push the code and wait for the pipeline to finish. 
 The pipeline will output the address of the bucket. You can view the file in the browser by pasting the the address http://app-name.s3.eu-central-1.amazonaws.com/index.html in the address bar.
